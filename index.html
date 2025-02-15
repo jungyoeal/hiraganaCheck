@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7252517826751602"
-     crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>히라가나 연습</title>
@@ -50,9 +48,37 @@
             margin: 10px 0;
             height: 25px;
         }
-        .score {
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .stat-item {
             font-size: 16px;
-            color: #666;
+            color: #333;
+        }
+        .round-info {
+            font-size: 18px;
+            color: #2196F3;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .progress-container {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s ease;
         }
         .correct {
             color: #4CAF50;
@@ -65,17 +91,34 @@
             color: #666;
             margin-top: 10px;
         }
+        .message {
+            font-size: 16px;
+            color: #2196F3;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>히라가나 연습</h1>
+        <div class="round-info" id="roundInfo">전체 단어 학습</div>
+        <div class="stats">
+            <div class="stat-item">진행: <span id="progressText">0/0</span></div>
+            <div class="stat-item">정답률: <span id="accuracyText">100%</span></div>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="message" id="message"></div>
         <div class="hiragana" id="hiragana"></div>
         <div class="input-area">
             <input type="text" id="userInput" placeholder="한글 발음 입력" autocomplete="off">
         </div>
         <div class="result" id="result"></div>
-        <div class="score" id="score">맞춘 개수: 0</div>
         <p class="hint">발음을 입력하고 Enter를 누르세요</p>
     </div>
 
@@ -94,47 +137,122 @@
         };
 
         let currentHiragana = '';
-        let score = 0;
+        let currentRound = 1;
+        let answeredCount = 0;
+        let correctCount = 0;
+        let isProcessing = false;
+        let remainingWords = [];
+        let incorrectWords = new Set();
 
         const hiraganaElement = document.getElementById('hiragana');
         const userInput = document.getElementById('userInput');
         const resultElement = document.getElementById('result');
-        const scoreElement = document.getElementById('score');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const accuracyText = document.getElementById('accuracyText');
+        const roundInfo = document.getElementById('roundInfo');
+        const messageElement = document.getElementById('message');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function updateStats() {
+            const totalWords = remainingWords.length + answeredCount;
+            const progress = (answeredCount / totalWords) * 100;
+            const accuracy = (correctCount / answeredCount) * 100 || 100;
+            
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${answeredCount}/${totalWords}`;
+            accuracyText.textContent = `${accuracy.toFixed(1)}%`;
+        }
+
+        function startNewRound() {
+            if (incorrectWords.size === 0) {
+                hiraganaElement.textContent = "모든 학습 완료!";
+                userInput.disabled = true;
+                messageElement.style.display = 'block';
+                messageElement.textContent = "축하합니다! 모든 히라가나를 학습했습니다!";
+                return;
+            }
+
+            currentRound++;
+            remainingWords = shuffleArray([...incorrectWords]);
+            incorrectWords.clear();
+            answeredCount = 0;
+            correctCount = 0;
+            
+            roundInfo.textContent = `오답 학습 - ${currentRound}라운드`;
+            messageElement.style.display = 'block';
+            messageElement.textContent = `틀린 ${remainingWords.length}개의 단어를 다시 학습합니다.`;
+            
+            showNextHiragana();
+            updateStats();
+        }
 
         function showNextHiragana() {
-            const hiraganas = Object.keys(hiraganaDict);
-            currentHiragana = hiraganas[Math.floor(Math.random() * hiraganas.length)];
+            if (remainingWords.length === 0) {
+                if (incorrectWords.size > 0) {
+                    setTimeout(() => {
+                        startNewRound();
+                    }, 1500);
+                } else {
+                    startNewRound();
+                }
+                return;
+            }
+
+            currentHiragana = remainingWords.pop();
             hiraganaElement.textContent = currentHiragana;
             userInput.value = '';
             resultElement.textContent = '';
             userInput.focus();
+            isProcessing = false;
+            messageElement.style.display = 'none';
         }
 
         function checkAnswer() {
+            if (isProcessing) return;
+            isProcessing = true;
+
             const userAnswer = userInput.value.trim();
             const correctAnswer = hiraganaDict[currentHiragana];
 
+            answeredCount++;
+            
             if (userAnswer === correctAnswer) {
                 resultElement.textContent = '정답입니다!';
                 resultElement.className = 'result correct';
-                score++;
-                scoreElement.textContent = `맞춘 개수: ${score}`;
+                correctCount++;
             } else {
                 resultElement.textContent = `틀렸습니다. 정답은 '${correctAnswer}'입니다.`;
                 resultElement.className = 'result incorrect';
+                incorrectWords.add(currentHiragana);
             }
 
-            setTimeout(showNextHiragana, 1500);
+            updateStats();
+            userInput.disabled = true;
+
+            setTimeout(() => {
+                userInput.disabled = false;
+                showNextHiragana();
+            }, 1500);
         }
 
         userInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && !isProcessing) {
                 checkAnswer();
             }
         });
 
-        // 첫 문제 표시
+        // 초기화
+        remainingWords = shuffleArray(Object.keys(hiraganaDict));
         showNextHiragana();
+        updateStats();
     </script>
 </body>
 </html>
