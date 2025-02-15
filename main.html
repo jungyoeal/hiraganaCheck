@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>히라가나 연습</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 600px;
+      width: 90%;
+    }
+    .hiragana {
+      font-size: 80px;
+      margin: 20px 0;
+      height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .input-area {
+      margin: 20px 0;
+    }
+    input {
+      font-size: 20px;
+      padding: 10px;
+      width: 200px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      text-align: center;
+    }
+    .result {
+      font-size: 18px;
+      margin: 10px 0;
+      height: 25px;
+    }
+    .score {
+      font-size: 16px;
+      color: #666;
+    }
+    .correct {
+      color: #4CAF50;
+    }
+    .incorrect {
+      color: #f44336;
+    }
+    .hint {
+      font-size: 14px;
+      color: #666;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>히라가나 연습</h1>
+  <div class="hiragana" id="hiragana"></div>
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="한글 발음 입력" autocomplete="off">
+  </div>
+  <div class="result" id="result"></div>
+  <div class="score" id="score">맞춘 개수: 0</div>
+  <p class="hint">발음을 입력하고 Enter를 누르세요</p>
+</div>
+
+<script>
+  const hiraganaDict = {
+    'あ': '아', 'い': '이', 'う': '우', 'え': '에', 'お': '오',
+    'か': '카', 'き': '키', 'く': '쿠', 'け': '케', 'こ': '코',
+    'さ': '사', 'し': '시', 'す': '스', 'せ': '세', 'そ': '소',
+    'た': '타', 'ち': '치', 'つ': '츠', 'て': '테', 'と': '토',
+    'な': '나', 'に': '니', 'ぬ': '누', 'ね': '네', 'の': '노',
+    'は': '하', 'ひ': '히', 'ふ': '후', 'へ': '헤', 'ほ': '호',
+    'ま': '마', 'み': '미', 'む': '무', 'め': '메', 'も': '모',
+    'や': '야', 'ゆ': '유', 'よ': '요',
+    'ら': '라', 'り': '리', 'る': '루', 'れ': '레', 'ろ': '로',
+    'わ': '와', 'を': '오', 'ん': '응'
+  };
+
+  let currentHiragana = '';
+  let score = 0;
+
+  const hiraganaElement = document.getElementById('hiragana');
+  const userInput = document.getElementById('userInput');
+  const resultElement = document.getElementById('result');
+  const scoreElement = document.getElementById('score');
+
+  function showNextHiragana() {
+    const hiraganas = Object.keys(hiraganaDict);
+    currentHiragana = hiraganas[Math.floor(Math.random() * hiraganas.length)];
+    hiraganaElement.textContent = currentHiragana;
+    userInput.value = '';
+    resultElement.textContent = '';
+    userInput.focus();
+  }
+
+  function checkAnswer() {
+    const userAnswer = userInput.value.trim();
+    const correctAnswer = hiraganaDict[currentHiragana];
+
+    if (userAnswer === correctAnswer) {
+      resultElement.textContent = '정답입니다!';
+      resultElement.className = 'result correct';
+      score++;
+      scoreElement.textContent = `맞춘 개수: ${score}`;
+    } else {
+      resultElement.textContent = `틀렸습니다. 정답은 '${correctAnswer}'입니다.`;
+      resultElement.className = 'result incorrect';
+    }
+
+    setTimeout(showNextHiragana, 1500);
+  }
+
+  userInput.addEventListener('keyup', (event) => {
+    if (event.key === 'Enter') {
+      checkAnswer();
+    }
+  });
+
+  // 첫 문제 표시
+  showNextHiragana();
+</script>
+</body>
+</html>
