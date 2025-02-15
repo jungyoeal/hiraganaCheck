@@ -23,7 +23,6 @@
             text-align: center;
             max-width: 600px;
             width: 90%;
-            position: relative;
         }
         .hiragana {
             font-size: 80px;
@@ -55,7 +54,6 @@
         }
         .correct {
             color: #4CAF50;
-            animation: popIn 0.5s ease-out;
         }
         .incorrect {
             color: #f44336;
@@ -64,93 +62,6 @@
             font-size: 14px;
             color: #666;
             margin-top: 10px;
-        }
-        .wrong-answers-button {
-            background-color: #f44336;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .wrong-answers-list {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #fff3f3;
-            border-radius: 5px;
-            display: none;
-        }
-        .wrong-item {
-            margin: 5px 0;
-            padding: 5px;
-            border-bottom: 1px solid #ffcdd2;
-        }
-        .achievement {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #4CAF50;
-            color: white;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            animation: slideIn 0.5s ease-out;
-            z-index: 1000;
-        }
-        .milestone {
-            background-color: #ff9800;
-            padding: 10px;
-            border-radius: 5px;
-            color: white;
-            margin: 10px 0;
-            display: none;
-        }
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background-color: #ff0;
-            animation: confetti 1s ease-out forwards;
-            opacity: 0;
-        }
-        @keyframes popIn {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        @keyframes confetti {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(100vh) rotate(720deg);
-                opacity: 0;
-            }
-        }
-        .progress-container {
-            width: 100%;
-            background-color: #f0f0f0;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-        .progress-bar {
-            width: 0%;
-            height: 20px;
-            background-color: #4CAF50;
-            border-radius: 5px;
-            transition: width 0.3s ease;
         }
     </style>
 </head>
@@ -162,14 +73,8 @@
             <input type="text" id="userInput" placeholder="한글 발음 입력" autocomplete="off">
         </div>
         <div class="result" id="result"></div>
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
         <div class="score" id="score">맞춘 개수: 0</div>
-        <div class="milestone" id="milestone"></div>
         <p class="hint">발음을 입력하고 Enter를 누르세요</p>
-        <button class="wrong-answers-button" id="showWrongAnswers">틀린 문제 확인하기</button>
-        <div class="wrong-answers-list" id="wrongAnswersList"></div>
     </div>
 
     <script>
@@ -186,72 +91,13 @@
             'わ': '와', 'を': '오', 'ん': '응'
         };
 
-        const totalHiragana = Object.keys(hiraganaDict).length;
-        const milestones = {
-            5: '시작이 반이에요!',
-            10: '열심히 하고 계시네요!',
-            20: '대단해요! 계속 힘내세요!',
-            30: '절반을 넘었어요!',
-            40: '거의 다 왔어요!',
-            46: '축하합니다! 모든 히라가나를 마스터했어요! 🎉'
-        };
-
-        const learnedHiragana = new Set();
         let currentHiragana = '';
         let score = 0;
-        // 틀린 문제를 저장할 객체
-        let wrongAnswers = {};
 
         const hiraganaElement = document.getElementById('hiragana');
         const userInput = document.getElementById('userInput');
         const resultElement = document.getElementById('result');
         const scoreElement = document.getElementById('score');
-        const milestoneElement = document.getElementById('milestone');
-        const progressBar = document.getElementById('progressBar');
-
-        function showAchievement(message) {
-            const achievement = document.createElement('div');
-            achievement.className = 'achievement';
-            achievement.textContent = message;
-            document.body.appendChild(achievement);
-
-            setTimeout(() => {
-                achievement.remove();
-            }, 3000);
-        }
-
-        function createConfetti() {
-            for (let i = 0; i < 30; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.left = Math.random() * 100 + '%';
-                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
-                confetti.style.animationDelay = Math.random() * 0.5 + 's';
-                document.querySelector('.container').appendChild(confetti);
-
-                setTimeout(() => {
-                    confetti.remove();
-                }, 2000);
-            }
-        }
-
-        function updateProgress() {
-            const progress = (learnedHiragana.size / totalHiragana) * 100;
-            progressBar.style.width = `${progress}%`;
-        }
-
-        function checkMilestone() {
-            const size = learnedHiragana.size;
-            if (milestones[size]) {
-                milestoneElement.textContent = milestones[size];
-                milestoneElement.style.display = 'block';
-                showAchievement(milestones[size]);
-                createConfetti();
-                setTimeout(() => {
-                    milestoneElement.style.display = 'none';
-                }, 3000);
-            }
-        }
 
         function showNextHiragana() {
             const hiraganas = Object.keys(hiraganaDict);
@@ -269,78 +115,19 @@
             if (userAnswer === correctAnswer) {
                 resultElement.textContent = '정답입니다!';
                 resultElement.className = 'result correct';
-                
-                // 이미 학습한 히라가나가 아닐 경우에만 점수 증가
-                if (!learnedHiragana.has(currentHiragana)) {
-                    score++;
-                    learnedHiragana.add(currentHiragana);
-                    scoreElement.textContent = `맞춘 개수: ${score}`;
-                    updateProgress();
-                    checkMilestone();
-                }
+                score++;
+                scoreElement.textContent = `맞춘 개수: ${score}`;
             } else {
                 resultElement.textContent = `틀렸습니다. 정답은 '${correctAnswer}'입니다.`;
                 resultElement.className = 'result incorrect';
-                
-                // 틀린 문제 기록
-                if (!wrongAnswers[currentHiragana]) {
-                    wrongAnswers[currentHiragana] = {
-                        correctAnswer: correctAnswer,
-                        count: 0,
-                        lastWrong: new Date().toISOString()
-                    };
-                }
-                wrongAnswers[currentHiragana].count++;
-                wrongAnswers[currentHiragana].lastWrong = new Date().toISOString();
             }
 
-            // 답안 입력을 비활성화하여 중복 입력 방지
-            userInput.disabled = true;
-            
-            setTimeout(() => {
-                showNextHiragana();
-                userInput.disabled = false;
-                userInput.focus();
-            }, 1500);
+            setTimeout(showNextHiragana, 1500);
         }
 
         userInput.addEventListener('keyup', (event) => {
             if (event.key === 'Enter') {
                 checkAnswer();
-            }
-        });
-
-        // 틀린 문제 목록 표시 기능
-        const wrongAnswersButton = document.getElementById('showWrongAnswers');
-        const wrongAnswersList = document.getElementById('wrongAnswersList');
-
-        wrongAnswersButton.addEventListener('click', () => {
-            if (wrongAnswersList.style.display === 'none' || !wrongAnswersList.style.display) {
-                // 틀린 문제 목록 업데이트
-                wrongAnswersList.innerHTML = '';
-                const sortedWrongs = Object.entries(wrongAnswers)
-                    .sort((a, b) => new Date(b[1].lastWrong) - new Date(a[1].lastWrong));
-
-                if (sortedWrongs.length === 0) {
-                    wrongAnswersList.innerHTML = '<p>아직 틀린 문제가 없습니다!</p>';
-                } else {
-                    sortedWrongs.forEach(([hiragana, data]) => {
-                        const date = new Date(data.lastWrong).toLocaleDateString();
-                        const wrongItem = document.createElement('div');
-                        wrongItem.className = 'wrong-item';
-                        wrongItem.innerHTML = `
-                            <strong>${hiragana}</strong> → ${data.correctAnswer}
-                            <br>틀린 횟수: ${data.count}회
-                            <br>마지막으로 틀린 날짜: ${date}
-                        `;
-                        wrongAnswersList.appendChild(wrongItem);
-                    });
-                }
-                wrongAnswersList.style.display = 'block';
-                wrongAnswersButton.textContent = '틀린 문제 숨기기';
-            } else {
-                wrongAnswersList.style.display = 'none';
-                wrongAnswersButton.textContent = '틀린 문제 확인하기';
             }
         });
 
