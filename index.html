@@ -187,7 +187,6 @@
         function startNewRound() {
             if (incorrectWords.size === 0) {
                 hiraganaElement.textContent = "모든 학습 완료!";
-                userInput.disabled = true;
                 messageElement.style.display = 'block';
                 messageElement.textContent = "축하합니다! 모든 히라가나를 학습했습니다!";
                 return;
@@ -248,7 +247,7 @@
             }
 
             updateStats();
-            userInput.disabled = true;
+ 
 
             setTimeout(() => {
                 userInput.disabled = false;
