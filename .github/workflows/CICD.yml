@@ -25,7 +25,7 @@ jobs:
 
   deploy:
     needs: [build-push]
-    runs-on: [self-hosted, raspberrypi]
+    runs-on: raspberrypi
     env:
       PROJECT_NAME: "nextjs-app"
     steps:
